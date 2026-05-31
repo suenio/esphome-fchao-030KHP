@@ -1,0 +1,1423 @@
+substitutions:
+  name: fchao_inverter
+  device_description: "FCHAO 030KHP Inverter"
+  cat1: "[DI]"
+  cat2: "[PAR]"
+  tx_pin: GPIO22
+  rx_pin: GPIO21
+
+esphome:
+  name: ${name}
+  comment: ${device_description}
+  min_version: 2026.4.0
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  - platform: esphome    
+    password: !secret ota_password
+
+esp32:
+  #board: wemos_d1_mini32
+  board: esp32dev
+  framework:
+    type: esp-idf
+ #   type: arduino
+#esp32:
+  #board: esp32-s3-devkitc-1
+  #variant: ESP32S3
+  #flash_size: 16MB
+  #framework:
+  #  type: arduino
+#    version: 2.0.4
+#  framework:
+#    type: esp-idf
+#    sdkconfig_options:
+#      CONFIG_ESP32_S3_BOX_BOARD: "y"
+
+
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+web_server:
+  port: 80
+  #version: 3
+  #auth:
+  #  username: !secret web_server_username
+  #  password: !secret web_server_password  
+
+logger:
+  level: DEBUG
+  #3level: DEBUG
+  
+# Set pins required for LilyGo T-CAN485 board comment out if using different board
+output:
+  - platform: gpio
+    id: ENABLE_PIN # Enable the chip
+    pin:
+      number: GPIO19
+      inverted: true
+  - platform: gpio
+    id: SE_PIN # Enable autodirection
+    pin:
+      number: GPIO17
+      inverted: true
+  - platform: gpio
+    id: ENABLE_5V_PIN # Enable 5V pin for RS485 chip
+    pin:
+      number: GPIO16
+      inverted: true
+
+# =========================
+# UART / MODBUS
+# =========================
+uart:
+  id: uart_modbus
+  tx_pin: ${tx_pin}
+  rx_pin: ${rx_pin}
+  baud_rate: 9600
+
+modbus:
+  id: modbus1
+  uart_id: uart_modbus
+  send_wait_time: 200ms
+
+modbus_controller:
+  - id: inverter_modbus
+    address: 5
+    modbus_id: modbus1
+    update_interval: 30s
+    #setup_priority: -10
+    #command_throttle: 10ms
+  
+sensor:
+# =========================
+# ⚡ SYSTEM INFORMATION
+# =========================
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: ac_grid_voltage
+    name: "${cat1} AC Grid Voltage"
+    entity_category: DIAGNOSTIC
+    address: 2002
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: voltage
+    unit_of_measurement: "V"
+    filters: 
+      - multiply: 0.1 
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: ac_grid_frequency
+    name: "${cat1} AC Grid Frequency"
+    entity_category: DIAGNOSTIC
+    address: 2003
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: frequency
+    unit_of_measurement: "Hz"
+    filters: 
+      - multiply: 0.1 
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: pv1_input_voltage
+    name: "${cat1} PV1 Input Voltage"
+    entity_category: DIAGNOSTIC
+    address: 2004
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: voltage
+    unit_of_measurement: "V"
+    filters: 
+      - multiply: 0.1  
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: pv1_input_power
+    name: "${cat1} PV1 Input Power"
+    entity_category: DIAGNOSTIC
+    address: 2005
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: power
+    unit_of_measurement: "W"
+    filters: 
+      - multiply: 1  
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: battery_voltage
+    name: "${cat1} Battery Voltage"
+    entity_category: DIAGNOSTIC
+    address: 2006
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: voltage
+    unit_of_measurement: "V"
+    filters: 
+      - multiply: 0.1  
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: battery_soc_percentage
+    name: "${cat1} Battery SOC Percentage"
+    entity_category: DIAGNOSTIC
+    address: 2007
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: battery
+    unit_of_measurement: "%"
+    filters: 
+      - multiply: 1  
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: battery_charging_current
+    name: "${cat1} Battery Charging Current"
+    entity_category: DIAGNOSTIC
+    address: 2008
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: current
+    unit_of_measurement: "A"
+    filters: 
+      - multiply: 1
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: battery_discharge_current
+    name: "${cat1} Battery Discharge Current"
+    entity_category: DIAGNOSTIC
+    address: 2009
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: current
+    unit_of_measurement: "A"
+    filters: 
+      - multiply: 1 
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: ac_output_voltage
+    name: "${cat1} AC Output Voltage"
+    entity_category: DIAGNOSTIC
+    address: 2010
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: voltage
+    unit_of_measurement: "V"
+    filters: 
+      - multiply: 0.1 
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: ac_output_frequency
+    name: "${cat1} AC Output Frequency"
+    entity_category: DIAGNOSTIC
+    address: 2011
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: frequency
+    unit_of_measurement: "Hz"
+    filters: 
+      - multiply: 0.1  
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: ac_output_apparent_power
+    name: "${cat1} AC Output Apparent Power"
+    entity_category: DIAGNOSTIC
+    address: 2012
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: power_factor
+    unit_of_measurement: "VA"
+    filters: 
+      - multiply: 1  
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: ac_output_active_power
+    name: "${cat1} AC Output Active Power"
+    entity_category: DIAGNOSTIC
+    address: 2013
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: power
+    unit_of_measurement: "W"
+    filters: 
+      - multiply: 1  
+    
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: ac_output_load_percentage
+    name: "${cat1} AC Output Load Percentage"
+    entity_category: DIAGNOSTIC
+    address: 2014
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: power_factor
+    unit_of_measurement: "%"
+    filters: 
+      - multiply: 1  
+    
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: mail_cpu_version
+    name: "${cat1} Main CPU Version"
+    entity_category: DIAGNOSTIC
+    address: 2015
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2016
+    name: "${cat1} Register 2016"
+    entity_category: DIAGNOSTIC
+    address: 2016
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: inverter_rated_power
+    name: "${cat1} Inverter Rated Power"
+    entity_category: DIAGNOSTIC
+    address: 2017
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: power
+    unit_of_measurement: "W"
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2018
+    name: "${cat1} Register 2018"
+    entity_category: DIAGNOSTIC
+    address: 2018
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2019
+    name: "${cat1} Register 2019"
+    entity_category: DIAGNOSTIC
+    address: 2019
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2020
+    name: "${cat1} Register 2020"
+    entity_category: DIAGNOSTIC
+    address: 2020
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2021
+    name: "${cat1} Register 2021"
+    entity_category: DIAGNOSTIC
+    address: 2021
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: main_battery_voltage
+    name: "${cat1} Main Battery Voltage"
+    entity_category: DIAGNOSTIC
+    address: 2022
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: voltage
+    unit_of_measurement: "V"
+    filters: 
+      - multiply: 0.1 
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: output_main_voltage
+    name: "${cat1} Output Main Voltage"
+    entity_category: DIAGNOSTIC
+    address: 2023
+    register_type: holding
+    value_type: U_WORD
+    state_class: measurement
+    device_class: voltage
+    unit_of_measurement: "V"
+    filters: 
+      - multiply: 1 
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2024
+    name: "${cat1} Register 2024"
+    entity_category: DIAGNOSTIC
+    address: 2024
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2025
+    name: "${cat1} Register 2025"
+    entity_category: DIAGNOSTIC
+    address: 2025
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2026
+    name: "${cat1} Register 2026"
+    entity_category: DIAGNOSTIC
+    address: 2026
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2027
+    name: "${cat1} Register 2027"
+    entity_category: DIAGNOSTIC
+    address: 2027
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2028
+    name: "${cat1} Register 2028"
+    entity_category: DIAGNOSTIC
+    address: 2028
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2029
+    name: "${cat1} Register 2029"
+    entity_category: DIAGNOSTIC
+    address: 2029
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2030
+    name: "${cat1} Register 2030"
+    entity_category: DIAGNOSTIC
+    address: 2030
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2031
+    name: "${cat1} Register 2031"
+    entity_category: DIAGNOSTIC
+    address: 2031
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2032
+    name: "${cat1} Register 2032"
+    entity_category: DIAGNOSTIC
+    address: 2032
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2033
+    name: "${cat1} Register 2033"
+    entity_category: DIAGNOSTIC
+    address: 2033
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2034
+    name: "${cat1} Register 2034"
+    entity_category: DIAGNOSTIC
+    address: 2034
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2035
+    name: "${cat1} Register 2035"
+    entity_category: DIAGNOSTIC
+    address: 2035
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2036
+    name: "${cat1} Register 2036"
+    entity_category: DIAGNOSTIC
+    address: 2036
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2037
+    name: "${cat1} Register 2037"
+    entity_category: DIAGNOSTIC
+    address: 2037
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2038
+    name: "${cat1} Register 2038"
+    entity_category: DIAGNOSTIC
+    address: 2038
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2039
+    name: "${cat1} Register 2039"
+    entity_category: DIAGNOSTIC
+    address: 2039
+    register_type: holding
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2040
+    name: "${cat1} Register 2040"
+    entity_category: DIAGNOSTIC
+    address: 2040
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2041
+    name: "${cat1} Register 2041"
+    entity_category: DIAGNOSTIC
+    address: 2041
+    register_type: holding
+    value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2042
+  #  name: "${cat1} Register 2042"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2042
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2043
+  #  name: "${cat1} Register 2043"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2043
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2044
+  #  name: "${cat1} Register 2044"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2044
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2045
+  #  name: "${cat1} Register 2045"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2045
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2046
+  #  name: "${cat1} Register 2046"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2046
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2047
+  #  name: "${cat1} Register 2047"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2047
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2048
+  #  name: "${cat1} Register 2048"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2048
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2049
+  #  name: "${cat1} Register 2049"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2049
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2050
+  #  name: "${cat1} Register 2050"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2050
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2051
+  ##  name: "${cat1} Register 2051"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2051
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2052
+  #  name: "${cat1} Register 2052"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2052
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2053
+  #  name: "${cat1} Register 2053"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2053
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  ##  id: register_2054
+   # name: "${cat1} Register 2054"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2054
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2055
+    name: "${cat1} Register 2055"
+    entity_category: DIAGNOSTIC
+    address: 2055
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2056
+    name: "${cat1} Register 2056"
+    entity_category: DIAGNOSTIC
+    address: 2056
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2057
+    name: "${cat1} Register 2057"
+    entity_category: DIAGNOSTIC
+    address: 2057
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2058
+    name: "${cat1} Register 2058"
+    entity_category: DIAGNOSTIC
+    address: 2058
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2059
+    name: "${cat1} Register 2059"
+    entity_category: DIAGNOSTIC
+    address: 2059
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2060
+    name: "${cat1} Register 2060"
+    entity_category: DIAGNOSTIC
+    address: 2060
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2061
+    name: "${cat1} Register 2061"
+    entity_category: DIAGNOSTIC
+    address: 2061
+    register_type: holding
+    value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2062
+  #  name: "${cat1} Register 2062"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2062
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2063
+    name: "${cat1} Register 2063"
+    entity_category: DIAGNOSTIC
+    address: 2063
+    register_type: holding
+    value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2064
+  #  name: "${cat1} Register 2064"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2064
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2065
+    name: "${cat1} Register 2065"
+    entity_category: DIAGNOSTIC
+    address: 2065
+    register_type: holding
+    value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2066
+  #  name: "${cat1} Register 2066"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2066
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2067
+  #  name: "${cat1} Register 2067"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2067
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2068
+  #  name: "${cat1} Register 2068"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2068
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2069
+  #  name: "${cat1} Register 2069"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2069
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2070
+  #  name: "${cat1} Register 2070"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2070
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2071
+  #  name: "${cat1} Register 2071"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2071
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2072
+  #  name: "${cat1} Register 2072"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2072
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2073
+  #  name: "${cat1} Register 2073"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2073
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  #- platform: modbus_controller
+  #  modbus_controller_id: inverter_modbus
+  #  id: register_2074
+  #  name: "${cat1} Register 2074"
+  #  entity_category: DIAGNOSTIC
+  #  address: 2074
+  #  register_type: holding
+  #  value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2075
+    name: "${cat1} Register 2075"
+    entity_category: DIAGNOSTIC
+    address: 2075
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2076
+    name: "${cat1} Register 2076"
+    entity_category: DIAGNOSTIC
+    address: 2076
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2077
+    name: "${cat1} Register 2077"
+    entity_category: DIAGNOSTIC
+    address: 2077
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2078
+    name: "${cat1} Register 2078"
+    entity_category: DIAGNOSTIC
+    address: 2078
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2079
+    name: "${cat1} Register 2079"
+    entity_category: DIAGNOSTIC
+    address: 2079
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2080
+    name: "${cat1} Register 2080"
+    entity_category: DIAGNOSTIC
+    address: 2080
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2081
+    name: "${cat1} Register 2081"
+    entity_category: DIAGNOSTIC
+    address: 2081
+    register_type: holding
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: register_2082
+    name: "${cat1} Register 2082"
+    entity_category: DIAGNOSTIC
+    address: 2082
+    register_type: holding
+    value_type: U_WORD
+
+text_sensor:
+# =========================
+# 🌡 SYSTEM
+# =========================
+  
+  - platform: modbus_controller  ##ok
+    modbus_controller_id: inverter_modbus
+    id: operating_mode
+    name: "${cat1} Operating Mode"
+    entity_category: DIAGNOSTIC
+    address: 2001
+    register_type: holding
+    raw_encode: HEXBYTES
+    lambda: |-
+      uint16_t value = modbus::helpers::word_from_hex_str(x, 0);
+      switch(value) {
+        case 0: return {"Power On Mode"};
+        case 1: return {"Standby Mode)"};
+        case 2: return {"Mains Mode (On-grid)"};
+        case 3: return {"Off-grid Mode"};
+        case 4: return {"Bypass Mode"};
+        case 5: return {"Charging Mode"};
+        case 6: return {"Fault Mode"};
+        default: {
+          std::string newString = "Unknown";
+          newString += " -> ";
+          newString += x;
+          return newString;
+        }
+      }
+
+  
+# =========================
+# 🚨 ERRORS
+# =========================
+#TBD need to reverse engineer error and fault reporting  
+  
+
+# =========================
+# 🎛 CONTROL
+# =========================
+
+select:
+  # =========================
+#  Inverter params
+# =========================
+  - platform: modbus_controller                                    
+    modbus_controller_id: inverter_modbus
+    id: p16_charge_source_priority
+    name: "${cat2} (P16) Charge Source Priority"
+    entity_category: config
+  #  use_write_multiple: true
+    optimistic: true
+    address: 2042
+    value_type: U_WORD
+    optionsmap: #{"0": "Utility priority", "1": "PV priority", "2": "PV is at the same level as the Utility", "3": "Only PV charging is allowed"}
+      "Utility Priority": 0
+      "PV Priority and if no PV thank Utility/Grid": 1
+      "PV is at the same lavel as the Utility/Grid": 2
+      "Only PV charging is allowed": 3
+    write_lambda: |-
+      ESP_LOGD("main", "New value 3036: %d", value);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3036,            // write register
+          (uint16_t)value);
+      id(inverter_modbus)->queue_command(cmd);
+      id(p16_charge_source_priority).publish_state(value);
+      return {};
+
+  - platform: modbus_controller                                    
+    modbus_controller_id: inverter_modbus
+    id: p01_output_source_priority
+    name: "${cat2} (P01) Output Source Priority"
+    entity_category: config
+    use_write_multiple: true
+    address: 2043
+    value_type: U_WORD
+    optionsmap: #{"0": "Utility-PV-Battery", "1": "PV-Utility-Battery", "2": "PV-Battery-Utility"} 
+      "Utility-PV-Battery Priority": 0
+      "PV-Utility-Battery Priority": 1
+      "PV-Battery-Utility Priority": 2
+    write_lambda: |-
+      ESP_LOGD("main", "New value 3037: %d", value);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3037,            // write register
+          (uint16_t)value);
+      id(inverter_modbus)->queue_command(cmd);
+      return {};
+
+  - platform: modbus_controller                                    
+    modbus_controller_id: inverter_modbus
+    id: p03_ac_input_range_setting
+    name: "${cat2} (P03) AC Input Range Setting"
+    entity_category: config
+    use_write_multiple: true
+    address: 2044
+    value_type: U_WORD
+    optionsmap: #{"0":"Appliance","1":"UPS")
+      "Appliance": 0
+      "UPS": 1
+    write_lambda: |-
+      ESP_LOGD("main", "New value 3038: %d", value);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3038,            // write register
+          (uint16_t)value);
+      id(inverter_modbus)->queue_command(cmd);
+      return {};
+
+  - platform: modbus_controller                                    
+    modbus_controller_id: inverter_modbus
+    id: p05_battery_type
+    name: "${cat2} (P05) Battery Type"
+    entity_category: config
+    use_write_multiple: true
+    address: 2045
+    value_type: U_WORD
+    optionsmap: #{"0": "AGM", "1": "Lithium", "2": "User"} 
+      "AGM": 0
+      "Lithium": 1
+      "User": 2
+    write_lambda: |-
+      ESP_LOGD("main", "New value 3039: %d", value);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3039,            // write register
+          (uint16_t)value);
+      id(inverter_modbus)->queue_command(cmd);
+      return {};
+
+  - platform: modbus_controller                                    
+    modbus_controller_id: inverter_modbus
+    id: p03_ac_output_frequency
+    name: "${cat2} (P09) AC Output Frequency"
+    entity_category: config
+    use_write_multiple: true
+    address: 2046
+    value_type: U_WORD
+    optionsmap: #{"0":"50Hz","1":"60Hz")
+      "50Hz": 0
+      "60Hz": 1
+    write_lambda: |-
+      ESP_LOGD("main", "New value 3040: %d", value);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3040,            // write register
+          (uint16_t)value);
+      id(inverter_modbus)->queue_command(cmd);
+      return {};
+
+  - platform: modbus_controller                                    
+    modbus_controller_id: inverter_modbus
+    id: p10_ac_output_voltage_setting
+    name: "${cat2} (P10) AC Output Voltage Setting"
+    entity_category: config
+    use_write_multiple: true
+    address: 2048
+    value_type: U_WORD
+    optionsmap: #{"220":"220V", "230":"230 V", "240": "240 V"}
+      "220V": 220
+      "230V": 230
+      "240V": 240
+    write_lambda: |-
+      ESP_LOGD("main", "New value 3042: %d", value);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3042,            // write register
+          (uint16_t)value);
+      id(inverter_modbus)->queue_command(cmd);
+      return {};
+
+number:
+# =========================
+#  Iinverter params control
+# =========================
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p02_max_total_charge_current_setting
+    name: "${cat2} (P02) Max Total Charge Current Setting"
+    address: 2047          # read register
+    register_type: holding
+    entity_category: config
+    value_type: U_WORD
+    min_value: 10
+    max_value: 100
+    step: 10
+    unit_of_measurement: "A"
+    write_lambda: |-
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3041,            // write register
+          (uint16_t)x);
+      id(inverter_modbus)->queue_command(cmd);
+      return x;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p11_grid_charging_current
+    name: "${cat2} (P11) Grid Charging Current"
+    address: 2049          # read register
+    register_type: holding
+    entity_category: config
+    value_type: U_WORD
+    min_value: 10
+    max_value: 80
+    step: 10
+    unit_of_measurement: "A"
+    write_lambda: |-
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3043,            // write register
+          (uint16_t)x);
+      id(inverter_modbus)->queue_command(cmd);
+      return x;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p12_restore_the_voltage_point_of_the_mains_power
+    name: "${cat2} (P12) Restore the Voltage Point of the Mains Power"
+    address: 2050          # read register
+    register_type: holding
+    entity_category: config
+    value_type: U_WORD
+    min_value: 42.0
+    max_value: 50.0
+    step: 1
+    unit_of_measurement: "V"
+    lambda: "return x * 0.1f;"
+    write_lambda: |-
+      uint16_t val = 0;
+      val += x * 10.0f;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3044,            // write register
+          val);
+      id(inverter_modbus)->queue_command(cmd);
+      return x;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p13_restore_battery_mode_voltage_point
+    name: "${cat2} (P13) Restore Battery Mode Voltage Point"
+    address: 2051          # read register
+    register_type: holding
+    entity_category: config
+    value_type: U_WORD
+    min_value: 48.0
+    max_value: 58.0
+    step: 1
+    unit_of_measurement: "V"
+    lambda: "return x * 0.1f;"
+    write_lambda: |-
+      uint16_t val = 0;
+      val += x * 10.0f;
+      ESP_LOGD("main", "New value 3045: %d", val);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3045,            // write register
+          val);
+      id(inverter_modbus)->queue_command(cmd);
+      return x;
+  
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p26_maximum_charging_voltage
+    name: "${cat2} (P26) Maximum Charging Voltage"
+    address: 2052          # read register
+    register_type: holding
+    entity_category: config
+    value_type: U_WORD
+    min_value: 48.0
+    max_value: 60.0
+    step: 0.1
+    unit_of_measurement: "V"
+    lambda: "return x * 0.1f;"
+    write_lambda: |-
+      uint16_t val = 0;
+      val += x * 10.0f;
+      ESP_LOGD("main", "New value 3045: %d", val);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3046,            // write register
+          val);
+      id(inverter_modbus)->queue_command(cmd);
+      return x;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p27_floating_charging_voltage
+    name: "${cat2} (P27) Floating Charging Voltage"
+    address: 2053          # read register
+    register_type: holding
+    entity_category: config
+    value_type: U_WORD
+    min_value: 48.0
+    max_value: 60.0
+    step: 0.1
+    unit_of_measurement: "V"
+    lambda: "return x * 0.1f;"
+    write_lambda: |-
+      uint16_t val = 0;
+      val += x * 10.0f;
+      ESP_LOGD("main", "New value 3045: %d", val);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3047,            // write register
+          val);
+      id(inverter_modbus)->queue_command(cmd);
+      return x;   
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p29_low_battery_cut_off_voltage
+    name: "${cat2} (P29) Low Battery Cut Off Voltage"
+    address: 2053          # read register
+    register_type: holding
+    entity_category: config
+    value_type: U_WORD
+    min_value: 48.0
+    max_value: 60.0
+    step: 0.1
+    unit_of_measurement: "V"
+    lambda: "return x * 0.1f;"
+    write_lambda: |-
+      uint16_t val = 0;
+      val += x * 10.0f;
+      ESP_LOGD("main", "New value 3045: %d", val);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3047,            // write register
+          val);
+      id(inverter_modbus)->queue_command(cmd);
+      return x;     
+
+    
+switch:
+# =========================
+#  Inverter controls
+# =========================
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: on_off_control
+    name: "${cat2} On/Off Control"
+    entity_category: config
+    address: 2010
+    register_type: holding
+    #bitmask: 0x0001
+    lambda: |-
+      if (x > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    write_lambda: |-
+      uint16_t val = x ? 1 : 6;
+      ESP_LOGD("main", "New value 3053: %d", val);
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3053,
+          val);
+      id(inverter_modbus)->queue_command(cmd);
+      return val==1 ? true : false;
+      
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    name: "${cat2} (P18) Buzzer Control"
+    id: rp18_buzzer_control
+    entity_category: config
+    address: 2064
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3055,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p20_lcd_backlight_setting
+    name: "${cat2} (P20) LCD Backlight Setting"
+    entity_category: config
+    address: 2066
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3057,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p06_overload_restart_setting
+    name: "${cat2} (P06) Overload Restart Setting "
+    entity_category: config
+    address: 2067
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3058,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p07_over_temperature_auto_restart_setting
+    name: "${cat2} (P07) Over Temperature Auto Restart Setting"
+    entity_category: config
+    address: 2068
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3059,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: alarm_sound_switch
+    name: "${cat2} Alarm Sound Switch"
+    entity_category: config
+    address: 2069
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3060,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p13_lcd_automatically_return_to_default_screen
+    name: "${cat2} (P19) LCD Automatically Return to Default Screen"
+    entity_category: config
+    address: 2070
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3061,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p23_transfer_to_bypass_from_overload
+    name: "${cat2} (P23) Transfer to Byass from Overload"
+    entity_category: config
+    address: 2071
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3062,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+  - platform: modbus_controller
+    modbus_controller_id: inverter_modbus
+    id: p25_record_fault_code_setting
+    name: "${cat2} (P25) Record Fault Code Setting"
+    entity_category: config
+    address: 2072
+    register_type: holding
+    bitmask: 0x0001
+    write_lambda: |-
+      uint16_t value = x ? 1 : 0;
+      auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+          id(inverter_modbus),
+          3063,
+          value);
+      id(inverter_modbus)->queue_command(cmd);
+      return value==1 ? true : false;
+
+button:
+  - platform: template
+    id: one_click_restore_all_settings
+    name: "${cat2} One Click Restore All Settings"
+    entity_category: config
+    on_press:
+      - lambda: |-
+          auto cmd = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(
+              id(inverter_modbus),
+              3069,
+              1);
+          id(inverter_modbus)->queue_command(cmd);
