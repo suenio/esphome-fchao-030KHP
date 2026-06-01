@@ -19,7 +19,7 @@ ESPHome example configuration to monitor and control a FCHAO 030KHP hybrid inver
 
 ## Schematics
 
-Inverter provides rs485 pins A and B on additional connector and this can work in parallell with attached data logger RWB1-51
+Inverter provides rs485 pins A and B on additional 4pin JST XH connector (next to green diode on picture below) and this can work in parallell with attached data logger RWB1-51
 
 <a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" target="_blank">
   <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" height="250">
@@ -45,11 +45,11 @@ LilyGo-RS485/CAN version
 │          │                 │          │
 │          │<─────  A  ─────>│  LilyGo  │
 │  FCHAO   │<─────  B  ─────>│  rs485   │
-│  030KHP  │<───── GND ─────>│  / CAN   │<── VCC ──┐
-│          │<─┐         │    │          │<── GND ┐ │ 
-└──────────┘  │         │    └──────────┘        │ │       
-              |         └────────────────────────┘ │ 
-              └─ 5V ───────────────────────────────┘  
+│  030KHP  │<───── GND ─────>│  / CAN   │<── VCC ── +7-24V
+│          │                 │          │<── GND ────────  
+└──────────┘                 └──────────┘                
+                         
+      
               
 ```               
 
@@ -61,11 +61,11 @@ self assembled Generic ESP32 board with RS485toTTL converter
 │          │                 │          │                   │          │
 │          │<─────  A  ─────>│  rs485   │<───  RX - TX  ───>│          │
 │  FCHAO   │<─────  B  ─────>│  to      │<───  TX - RX  ───>│  ESP32   │
-│  030KHP  │<───── GND ─────>│  TTL     │<─────  GND  ─────>│          │<────── VCC ──┐
-│          │<─┐         │    │          │<─── 3.3V VCC ────>│          │<────── GND ┐ │ 
-└──────────┘  │         │    └──────────┘                   └──────────┘            │ │       
-              |         └───────────────────────────────────────────────────────────┘ │ 
-              └─ 5V ──────────────────────────────────────────────────────────────────┘  
+│  030KHP  │<───── GND ─────>│  TTL     │<─────  GND  ─────>│          │<────── VCC ──── +5V
+│          │                 │          │<─── 3.3V VCC ────>│          │<────── GND ──────── 
+└──────────┘                 └──────────┘                   └──────────┘            │       
+               
+
 
 ```
 
