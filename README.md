@@ -7,6 +7,9 @@ ESPHome example configuration to monitor and control a FCHAO 030KHP hybrid inver
 
 * FCHAO 030KHP5.5KW-48V - FCHAO available on aliexpress
 
+<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6739.jpeg" target="_blank">
+  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6739.jpeg" height="250">
+</a>
 
 ## Requirements
 
@@ -16,14 +19,22 @@ ESPHome example configuration to monitor and control a FCHAO 030KHP hybrid inver
 
 ## Schematics
 
-<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/jsdsolar-img2.png" target="_blank">
-  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/jsdsolar-img2.png" height="250">
+Inverter provides rs485 pins A and B on additional connector and this can work in parallell with attached data logger RWB1-51
+
+<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" target="_blank">
+  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" height="250">
 </a>
 
-Inverter provides rs485 pins A and B on additional connector and this can work in parallell with attahced data logger RWB1-51
+<B>Red wire is A and Black is B for modbus/rs485 connection</B>
 
-<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/jsdsolar-img1.png" target="_blank">
-  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/jsdsolar-img1.png" height="250">
+There is also possibility to use rj45 socket for RWB1 data logger to connect esphome device following pinout below but this will require disconnecting data logger unless using rj45 splitter:
+
+<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/Solar-Plug-RWB1-rj45-pinout.png" target="_blank">
+  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/Solar-Plug-RWB1-rj45-pinout.png" height="250">
+</a>
+
+<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/Solar-Plug-RWB1-rj45-plug.png" target="_blank">
+  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/Solar-Plug-RWB1-rj45-plug.png" height="250">
 </a>
 
 ```
@@ -58,21 +69,17 @@ self assembled Generic ESP32 board with RS485toTTL converter
 
 ```
 
-The inverter provides +8V and GND on pin 3 and 4 of "hidden" rs485 connector but struggles with power to start lilygo. (See picture below for pinout). 
+The inverter provides VCC (+8V) and GND on pin 3 and 4 of "hidden" rs485 connector but struggles with power to start lilygo. (See picture below for pinout). 
 
-<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/fchao-img4.jpeg" target="_blank">
-  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/fchao-img4.jpeg" height="400">
+<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" target="_blank">
+  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" height="250">
 </a>
+
+<B>Yellow wire is GND and Blue is VCC (+8V)</B>
 
 For simplicity you can buy 4pin JST XH connector
 
 Also you can use a cheap DC-DC converter to power the ESP with 8V input and 3.3V/5V output.
-
-Finally your results after installing esphome code on the lilygo device will be:
-
-<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/fchao-img3.png" target="_blank">
-  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/fchao-img3.png" height="1200">
-</a>
 
 ## Installation in home assistant
 
@@ -103,6 +110,8 @@ ota_password: YOUR_OTA_PASSWORD
 1. This is work in progress but majority sensors works out of the box keep that in mind when using automations
 
 2. Not tested on esp8266 but most likely with proper configuration and build it will work
+
+3. Tried to use VCC and GND to power LilyGo but was unsuccessful as it looks that LilyGo was draining more power than available.
 
 
 ## Work in progress
