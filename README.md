@@ -81,6 +81,12 @@ For simplicity you can buy 4pin JST XH connector
 
 Also you can use a cheap DC-DC converter to power the ESP with 8V input and 3.3V/5V output.
 
+Finally your results after installing esphome code on the lilygo device will be:
+
+<a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/fchao_inverter_esphome.png" target="_blank">
+  <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/fchao_inverter_esphome.png" height="1200">
+</a>
+
 ## Installation in home assistant
 
 Use the `esphome-fchao-030khp.yaml` for testing purposes and finetune as of your needs
