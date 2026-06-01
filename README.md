@@ -63,19 +63,19 @@ self assembled Generic ESP32 board with RS485toTTL converter
 │  FCHAO   │<─────  B  ─────>│  to      │<───  TX - RX  ───>│  ESP32   │
 │  030KHP  │<───── GND ─────>│  TTL     │<─────  GND  ─────>│          │<────── VCC ──── +5V
 │          │                 │          │<─── 3.3V VCC ────>│          │<────── GND ──────── 
-└──────────┘                 └──────────┘                   └──────────┘            │       
+└──────────┘                 └──────────┘                   └──────────┘                  
                
 
 
 ```
 
-The inverter provides VCC (+8V) and GND on pin 3 and 4 of "hidden" rs485 connector but struggles with power to start lilygo. (See picture below for pinout). 
+The inverter provides VCC (+9V) and GND on pin 3 and 4 of "hidden" rs485 connector but struggles with power to start lilygo. (See picture below for pinout). 
 
 <a href="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" target="_blank">
   <img src="https://github.com/suenio/esphome-fchao-030khp/blob/main/images/IMG_6740.jpeg" height="250">
 </a>
 
-<B>Yellow wire is GND and Blue is VCC (+8V)</B>
+<B>Yellow wire is GND and Blue is VCC (+9V)</B>
 
 For simplicity you can buy 4pin JST XH connector
 
